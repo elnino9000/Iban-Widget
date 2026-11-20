@@ -1,0 +1,48 @@
+name: APK derle
+
+on:
+  push:
+    branches: ["**"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Android lisanslarını kabul et
+        run: yes | "$ANDROID_HOME"/cmdline-tools/*/bin/sdkmanager --licenses > /dev/null || true
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.9"
+
+      - name: APK derle
+        run: gradle assembleDebug --no-daemon --stacktrace
+
+      - name: APK'yı hazırla
+        run: cp app/build/outputs/apk/debug/app-debug.apk iban-widget.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: iban-widget
+          path: iban-widget.apk
+
+      - name: Release olarak yayınla
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release delete iban-widget-son --yes --cleanup-tag || true
+          gh release create iban-widget-son iban-widget.apk \
+            --target "$GITHUB_SHA" \
+            --title "IBAN Widget (son sürüm)" \
+            --notes "Telefondan indirip kur: iban-widget.apk"
