@@ -33,6 +33,7 @@ object Logos {
         for (i in 0 until Data.N) {
             val site = Data.site(ctx, i).trim().removePrefix("https://").removePrefix("http://").removePrefix("www.").trimEnd('/')
             if (site.isEmpty()) continue
+            if (java.io.File(ctx.filesDir, "manual$i").exists()) continue
             val urls = listOf(
                 "https://www.$site/apple-touch-icon.png",
                 "https://$site/apple-touch-icon.png",

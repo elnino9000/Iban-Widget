@@ -4,7 +4,12 @@ import android.app.Activity
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
+import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.os.Bundle
+import java.io.File
+import java.io.FileOutputStream
 import android.text.InputType
 import android.view.Gravity
 import android.view.ViewGroup
@@ -26,6 +31,7 @@ class MainActivity : Activity() {
     private lateinit var ownerF: EditText
     private lateinit var status: TextView
     private var d = 1f
+    private var pickIdx = -1
 
     private fun dp(v: Int) = (v * d).toInt()
 
@@ -67,7 +73,7 @@ class MainActivity : Activity() {
         })
         root.addView(TextView(this).apply {
             text = "1) Bankalarının IBAN'larını aşağıya yaz.\n" +
-                "2) \"Kaydet ve logoları indir\"e bas.\n" +
+                "2) \"Kaydet ve logoları indir\"e bas. Logosu gelmeyen bankada simgeye dokunup galeriden kendi logonu seçebilirsin.\n" +
                 "3) Ana ekranda boş yere uzun bas → Widget'lar → IBAN Widget.\n\n" +
                 "Widget'ta banka simgesine basınca WhatsApp açılır, IBAN yazılı gelir; kime göndereceğini seçersin. " +
                 "Bilgiler sadece bu telefonda durur."
@@ -103,6 +109,11 @@ class MainActivity : Activity() {
                 scaleType = ImageView.ScaleType.FIT_CENTER
             }
             logoVs.add(logo)
+            logo.setOnClickListener {
+                pickIdx = i
+                val it2 = Intent(Intent.ACTION_GET_CONTENT).apply { type = "image/*"; addCategory(Intent.CATEGORY_OPENABLE) }
+                startActivityForResult(Intent.createChooser(it2, "Logo seç"), 77)
+            }
             card.addView(logo, LinearLayout.LayoutParams(dp(64), dp(64)).apply { rightMargin = dp(12) })
 
             val col = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
@@ -162,6 +173,25 @@ class MainActivity : Activity() {
                 else "Logo indirilemedi (internet?). Widget baş harfli simgelerle çalışır."
                 Toast.makeText(this, status.text, Toast.LENGTH_LONG).show()
             }
+        }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        val uri = data?.data
+        if (requestCode != 77 || resultCode != RESULT_OK || uri == null || pickIdx < 0) return
+        try {
+            val opts = BitmapFactory.Options().apply { inSampleSize = 2 }
+            val raw = contentResolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it) } ?: return
+            val m = 256f / maxOf(raw.width, raw.height)
+            val bmp = if (m < 1f) Bitmap.createScaledBitmap(raw, (raw.width * m).toInt(), (raw.height * m).toInt(), true) else raw
+            FileOutputStream(Data.logoFile(this, pickIdx)).use { bmp.compress(Bitmap.CompressFormat.PNG, 100, it) }
+            File(filesDir, "manual$pickIdx").writeText("1")
+            logoVs[pickIdx].setImageBitmap(Icons.make(this, pickIdx, 160))
+            saveNow()
+            Toast.makeText(this, "Logo ayarlandı", Toast.LENGTH_SHORT).show()
+        } catch (e: Exception) {
+            Toast.makeText(this, "Resim açılamadı", Toast.LENGTH_SHORT).show()
         }
     }
 
