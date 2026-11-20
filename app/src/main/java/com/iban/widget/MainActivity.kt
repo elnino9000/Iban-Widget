@@ -76,7 +76,7 @@ class MainActivity : Activity() {
             text = "1) Bankalarının IBAN'larını aşağıya yaz.\n" +
                 "2) \"Kaydet ve logoları indir\"e bas. Logosu gelmeyen bankada simgeye dokunup galeriden kendi logonu seçebilirsin.\n" +
                 "3) Ana ekranda boş yere uzun bas → Widget'lar → IBAN Widget.\n\n" +
-                "Widget'ta banka simgesine basınca WhatsApp açılır, IBAN yazılı gelir; kime göndereceğini seçersin. " +
+                "Widget'ta banka simgesine basınca WhatsApp açılır, mesaj kutusunda sadece IBAN hazır gelir (ad ve banka yazılmaz); kime göndereceğini seçersin. " +
                 "Bilgiler sadece bu telefonda durur."
             textSize = 15f
             setTextColor(0xCCFFFFFF.toInt())

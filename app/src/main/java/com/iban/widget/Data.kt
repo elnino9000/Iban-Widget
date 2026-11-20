@@ -51,12 +51,6 @@ object Data {
         return clean.chunked(4).joinToString(" ")
     }
 
-    fun message(ctx: Context, i: Int): String {
-        val sb = StringBuilder()
-        val o = owner(ctx)
-        if (o.isNotBlank()) sb.append(o).append("\n")
-        sb.append(name(ctx, i)).append("\n")
-        sb.append(pretty(iban(ctx, i)))
-        return sb.toString()
-    }
+    /** Sadece IBAN, boşluksuz */
+    fun message(ctx: Context, i: Int): String = iban(ctx, i).filter { it.isLetterOrDigit() }.uppercase()
 }
