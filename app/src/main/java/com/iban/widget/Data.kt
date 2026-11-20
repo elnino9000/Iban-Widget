@@ -9,17 +9,17 @@ object Data {
     const val N = 11
 
     val defaults = listOf(
-        Bank("Ziraat", "ziraatbank.com.tr", 0xFFC8101E.toInt()),
-        Bank("İş Bankası", "isbank.com.tr", 0xFF1B3A8C.toInt()),
-        Bank("Garanti BBVA", "garantibbva.com.tr", 0xFF0C8A47.toInt()),
-        Bank("Akbank", "akbank.com", 0xFFC21320.toInt()),
-        Bank("Yapı Kredi", "yapikredi.com.tr", 0xFF0B4A98.toInt()),
-        Bank("Halkbank", "halkbank.com.tr", 0xFF0B4C94.toInt()),
-        Bank("Vakıfbank", "vakifbank.com.tr", 0xFFE09A00.toInt()),
-        Bank("QNB", "qnb.com.tr", 0xFF5C1A6C.toInt()),
+        Bank("Onmobil", "on.com.tr", 0xFF00A19B.toInt()),
         Bank("Denizbank", "denizbank.com", 0xFF0A72B8.toInt()),
+        Bank("Garanti BBVA", "garantibbva.com.tr", 0xFF0C8A47.toInt()),
+        Bank("Enpara", "enpara.com", 0xFFE5580A.toInt()),
+        Bank("Yapı Kredi", "yapikredi.com.tr", 0xFF0B4A98.toInt()),
+        Bank("Ziraat", "ziraatbank.com.tr", 0xFFC8101E.toInt()),
         Bank("TEB", "teb.com.tr", 0xFF0C8A47.toInt()),
-        Bank("Enpara", "enpara.com", 0xFFE5580A.toInt())
+        Bank("QNB (Finansbank)", "qnb.com.tr", 0xFF5C1A6C.toInt()),
+        Bank("İş Bankası", "isbank.com.tr", 0xFF1B3A8C.toInt()),
+        Bank("Odeabank", "odeabank.com.tr", 0xFFB0173B.toInt()),
+        Bank("Vakıfbank", "vakifbank.com.tr", 0xFFE09A00.toInt())
     )
 
     private fun p(ctx: Context) = ctx.getSharedPreferences("iban", Context.MODE_PRIVATE)
