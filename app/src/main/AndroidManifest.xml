@@ -26,6 +26,7 @@
 
         <receiver
             android:name=".WidgetProvider"
+            android:label="IBAN"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />

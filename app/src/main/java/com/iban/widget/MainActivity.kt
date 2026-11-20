@@ -150,6 +150,25 @@ class MainActivity : Activity() {
         }
         root.addView(btn, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(56)))
 
+        val pin = Button(this).apply {
+            text = "Widget'ı ana ekrana ekle"
+            textSize = 16f
+            setOnClickListener {
+                saveNow()
+                try {
+                    val am = android.appwidget.AppWidgetManager.getInstance(this@MainActivity)
+                    if (am.isRequestPinAppWidgetSupported) {
+                        am.requestPinAppWidget(android.content.ComponentName(this@MainActivity, WidgetProvider::class.java), null, null)
+                    } else {
+                        Toast.makeText(this@MainActivity, "Bu telefon desteklemiyor: ana ekranda boş yere uzun bas, Widget'lar'dan ekle", Toast.LENGTH_LONG).show()
+                    }
+                } catch (e: Exception) {
+                    Toast.makeText(this@MainActivity, "Eklenemedi: ana ekranda boş yere uzun bas, Widget'lar'dan ekle", Toast.LENGTH_LONG).show()
+                }
+            }
+        }
+        root.addView(pin, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(56)).apply { topMargin = dp(10) })
+
         setContentView(scroll)
     }
 
