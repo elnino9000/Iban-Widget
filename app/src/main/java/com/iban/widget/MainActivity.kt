@@ -26,6 +26,7 @@ class MainActivity : Activity() {
 
     private val nameFs = ArrayList<EditText>()
     private val siteFs = ArrayList<EditText>()
+    private val urlFs = ArrayList<EditText>()
     private val ibanFs = ArrayList<EditText>()
     private val logoVs = ArrayList<ImageView>()
     private lateinit var ownerF: EditText
@@ -123,9 +124,12 @@ class MainActivity : Activity() {
             inf.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_CHARACTERS or InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
             val sf = field("Banka sitesi (logo için)", Data.site(this, i), 12f)
             sf.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_URI
+            val uf = field("Logo linki (isteğe bağlı)", Data.logoUrl(this, i), 12f)
+            uf.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_URI
+            urlFs.add(uf)
             nameFs.add(nf); ibanFs.add(inf); siteFs.add(sf)
             val lp = { LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { bottomMargin = dp(6) } }
-            col.addView(nf, lp()); col.addView(inf, lp()); col.addView(sf, lp())
+            col.addView(nf, lp()); col.addView(inf, lp()); col.addView(sf, lp()); col.addView(uf, lp())
             card.addView(col, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
             root.addView(card, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
                 bottomMargin = dp(12)
@@ -157,6 +161,7 @@ class MainActivity : Activity() {
             siteFs.map { it.text.toString() },
             ibanFs.map { it.text.toString() }
         )
+        for (i in 0 until Data.N) Data.setLogoUrl(this, i, urlFs[i].text.toString())
         WidgetProvider.updateAll(this)
     }
 

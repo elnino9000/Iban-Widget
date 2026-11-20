@@ -32,9 +32,10 @@ object Logos {
         var ok = 0
         for (i in 0 until Data.N) {
             val site = Data.site(ctx, i).trim().removePrefix("https://").removePrefix("http://").removePrefix("www.").trimEnd('/')
-            if (site.isEmpty()) continue
+            if (site.isEmpty() && Data.logoUrl(ctx, i).isEmpty()) continue
             if (java.io.File(ctx.filesDir, "manual$i").exists()) continue
-            val urls = listOf(
+            val custom = Data.logoUrl(ctx, i)
+            val urls = (if (custom.startsWith("http")) listOf(custom) else emptyList()) + listOf(
                 "https://www.$site/apple-touch-icon.png",
                 "https://$site/apple-touch-icon.png",
                 "https://www.google.com/s2/favicons?domain=$site&sz=128"

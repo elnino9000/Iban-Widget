@@ -29,6 +29,9 @@ object Data {
     fun site(ctx: Context, i: Int): String = p(ctx).getString("site$i", defaults[i].site) ?: defaults[i].site
     fun iban(ctx: Context, i: Int): String = p(ctx).getString("iban$i", "") ?: ""
 
+    fun logoUrl(ctx: Context, i: Int): String = p(ctx).getString("logo$i", "") ?: ""
+    fun setLogoUrl(ctx: Context, i: Int, v: String) { p(ctx).edit().putString("logo$i", v.trim()).apply() }
+
     fun save(ctx: Context, owner: String, names: List<String>, sites: List<String>, ibans: List<String>) {
         val e = p(ctx).edit()
         e.putString("owner", owner.trim())
