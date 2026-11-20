@@ -51,6 +51,6 @@ object Data {
         return clean.chunked(4).joinToString(" ")
     }
 
-    /** Sadece IBAN, boşluksuz */
-    fun message(ctx: Context, i: Int): String = iban(ctx, i).filter { it.isLetterOrDigit() }.uppercase()
+    /** Sadece IBAN, 4'lü gruplar halinde boşluklu */
+    fun message(ctx: Context, i: Int): String = pretty(iban(ctx, i))
 }
