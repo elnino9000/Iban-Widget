@@ -38,7 +38,11 @@ object Logos {
             val urls = (if (custom.startsWith("http")) listOf(custom) else emptyList()) + listOf(
                 "https://www.$site/apple-touch-icon.png",
                 "https://$site/apple-touch-icon.png",
-                "https://www.google.com/s2/favicons?domain=$site&sz=128"
+                "https://www.google.com/s2/favicons?domain=$site&sz=128",
+                "https://www.google.com/s2/favicons?domain=www.$site&sz=128",
+                "https://icons.duckduckgo.com/ip3/$site.ico",
+                "https://www.$site/favicon.ico",
+                "https://$site/favicon.ico"
             )
             var got: Bitmap? = null
             for (u in urls) {
