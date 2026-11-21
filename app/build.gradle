@@ -3,6 +3,8 @@ plugins {
     id 'org.jetbrains.kotlin.android'
 }
 
+def runNo = (System.getenv("GITHUB_RUN_NUMBER") ?: "1").toInteger()
+
 android {
     namespace 'com.iban.widget'
     compileSdk 34
@@ -11,8 +13,8 @@ android {
         applicationId "com.iban.sendwidget"
         minSdk 26
         targetSdk 34
-        versionCode 1
-        versionName "1.0"
+        versionCode runNo
+        versionName "v${runNo}"
     }
 
     signingConfigs {

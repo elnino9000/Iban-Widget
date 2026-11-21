@@ -2,6 +2,8 @@ package com.iban.widget
 
 import android.content.Context
 import java.io.File
+import org.json.JSONArray
+import org.json.JSONObject
 
 class Bank(val name: String, val site: String, val color: Int)
 
@@ -51,6 +53,60 @@ object Data {
         return clean.chunked(4).joinToString(" ")
     }
 
-    /** Sadece IBAN, 4'lü gruplar halinde boşluklu */
-    fun message(ctx: Context, i: Int): String = pretty(iban(ctx, i))
+    fun withOwner(ctx: Context): Boolean = p(ctx).getBoolean("withOwner", false)
+    fun setWithOwner(ctx: Context, v: Boolean) { p(ctx).edit().putBoolean("withOwner", v).apply() }
+
+    /** IBAN, 4'lü gruplar halinde boşluklu; istenirse ilk satırda ad soyad */
+    fun message(ctx: Context, i: Int): String {
+        val iban = pretty(iban(ctx, i))
+        val o = owner(ctx)
+        return if (withOwner(ctx) && o.isNotBlank()) "$o\n$iban" else iban
+    }
+
+    /** Yedek: tüm bilgiler tek bir metin olarak (logo dosyaları hariç, tekrar indirilir) */
+    fun exportJson(ctx: Context): String {
+        val o = JSONObject()
+        o.put("app", "iban-widget")
+        o.put("v", 1)
+        o.put("owner", owner(ctx))
+        o.put("withOwner", withOwner(ctx))
+        val arr = JSONArray()
+        for (i in 0 until N) {
+            arr.put(
+                JSONObject()
+                    .put("name", name(ctx, i))
+                    .put("site", site(ctx, i))
+                    .put("iban", iban(ctx, i))
+                    .put("logo", logoUrl(ctx, i))
+            )
+        }
+        o.put("banks", arr)
+        return o.toString(2)
+    }
+
+    /** Yedek metninden geri yükler; başarılıysa true */
+    fun importJson(ctx: Context, text: String): Boolean {
+        return try {
+            val start = text.indexOf('{')
+            val end = text.lastIndexOf('}')
+            if (start < 0 || end <= start) return false
+            val o = JSONObject(text.substring(start, end + 1))
+            if (o.optString("app") != "iban-widget") return false
+            val arr = o.getJSONArray("banks")
+            val ed = p(ctx).edit()
+            ed.putString("owner", o.optString("owner").trim())
+            ed.putBoolean("withOwner", o.optBoolean("withOwner", false))
+            for (i in 0 until minOf(N, arr.length())) {
+                val b = arr.getJSONObject(i)
+                ed.putString("name$i", b.optString("name").trim().ifEmpty { defaults[i].name })
+                ed.putString("site$i", b.optString("site").trim().ifEmpty { defaults[i].site })
+                ed.putString("iban$i", b.optString("iban").trim())
+                ed.putString("logo$i", b.optString("logo").trim())
+            }
+            ed.apply()
+            true
+        } catch (ex: Exception) {
+            false
+        }
+    }
 }

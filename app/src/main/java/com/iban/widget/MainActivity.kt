@@ -1,6 +1,10 @@
 package com.iban.widget
 
 import android.app.Activity
+import android.app.AlertDialog
+import android.content.ClipboardManager
+import android.content.Context
+import android.widget.CheckBox
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
@@ -30,9 +34,11 @@ class MainActivity : Activity() {
     private val ibanFs = ArrayList<EditText>()
     private val logoVs = ArrayList<ImageView>()
     private lateinit var ownerF: EditText
+    private lateinit var ownerCb: CheckBox
     private lateinit var status: TextView
     private var d = 1f
     private var pickIdx = -1
+    private var skipSave = false // geri yükleme sonrası ekran yenilenirken eski değerler yazılmasın
 
     private fun dp(v: Int) = (v * d).toInt()
 
@@ -76,7 +82,7 @@ class MainActivity : Activity() {
             text = "1) Bankalarının IBAN'larını aşağıya yaz.\n" +
                 "2) \"Kaydet ve logoları indir\"e bas. Logosu gelmeyen bankada simgeye dokunup galeriden kendi logonu seçebilirsin.\n" +
                 "3) Ana ekranda boş yere uzun bas → Widget'lar → IBAN Widget.\n\n" +
-                "Widget'ta banka simgesine basınca WhatsApp açılır, mesaj kutusunda sadece IBAN hazır gelir (ad ve banka yazılmaz); kime göndereceğini seçersin. " +
+                "Widget'ta banka simgesine basınca WhatsApp açılır, mesaj kutusunda IBAN hazır gelir (istersen en üstte ad soyad da); kime göndereceğini seçersin. " +
                 "Bilgiler sadece bu telefonda durur."
             textSize = 15f
             setTextColor(0xCCFFFFFF.toInt())
@@ -84,13 +90,23 @@ class MainActivity : Activity() {
         })
 
         root.addView(TextView(this).apply {
-            text = "Hesap sahibi (mesajın ilk satırı, boş bırakabilirsin)"
+            text = "Hesap sahibi (isteğe bağlı)"
             textSize = 13f
             setTextColor(0x99FFFFFF.toInt())
             setPadding(dp(4), 0, 0, dp(4))
         })
         ownerF = field("Ad Soyad", Data.owner(this), 16f)
         root.addView(ownerF, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
+            bottomMargin = dp(16)
+        })
+
+        ownerCb = CheckBox(this).apply {
+            text = "Mesajda ad soyadı da gönder (ilk satır)"
+            textSize = 14f
+            setTextColor(Color.WHITE)
+            isChecked = Data.withOwner(this@MainActivity)
+        }
+        root.addView(ownerCb, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
             bottomMargin = dp(16)
         })
 
@@ -169,7 +185,70 @@ class MainActivity : Activity() {
         }
         root.addView(pin, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(56)).apply { topMargin = dp(10) })
 
+        val share = Button(this).apply {
+            text = "Yedeği paylaş (kendine gönder)"
+            textSize = 16f
+            setOnClickListener { shareBackup() }
+        }
+        root.addView(share, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(56)).apply { topMargin = dp(22) })
+
+        val restore = Button(this).apply {
+            text = "Yedeği panodan geri yükle"
+            textSize = 16f
+            setOnClickListener { restoreBackup() }
+        }
+        root.addView(restore, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(56)).apply { topMargin = dp(10) })
+
+        root.addView(TextView(this).apply {
+            text = "Yedek: \"Yedeği paylaş\"a basıp WhatsApp'ta kendine ya da bir not uygulamasına gönder. " +
+                "Yeni telefonda o metni kopyala, uygulamada \"Yedeği panodan geri yükle\"ye bas. " +
+                "Yedek metninde IBAN'ların açık yazılı olur; sadece güvendiğin yere gönder."
+            textSize = 13f
+            setTextColor(0x99FFFFFF.toInt())
+            setPadding(dp(4), dp(10), 0, 0)
+        })
+
+        val ver = try { packageManager.getPackageInfo(packageName, 0).versionName } catch (e: Exception) { "?" }
+        root.addView(TextView(this).apply {
+            text = "Sürüm: $ver"
+            textSize = 12f
+            setTextColor(0x66FFFFFF)
+            setPadding(dp(4), dp(18), 0, 0)
+        })
+
         setContentView(scroll)
+    }
+
+    private fun shareBackup() {
+        saveNow()
+        val send = Intent(Intent.ACTION_SEND)
+            .setType("text/plain")
+            .putExtra(Intent.EXTRA_TEXT, Data.exportJson(this))
+        startActivity(Intent.createChooser(send, "Yedeği gönder"))
+    }
+
+    private fun restoreBackup() {
+        val cm = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        val text = cm.primaryClip?.takeIf { it.itemCount > 0 }?.getItemAt(0)?.coerceToText(this)?.toString() ?: ""
+        if (!text.contains("iban-widget")) {
+            Toast.makeText(this, "Panoda yedek bulunamadı. Önce yedek metnini kopyala.", Toast.LENGTH_LONG).show()
+            return
+        }
+        AlertDialog.Builder(this)
+            .setTitle("Yedek geri yüklensin mi?")
+            .setMessage("Şu an telefondaki IBAN ve banka bilgilerinin üzerine yazılacak.")
+            .setNegativeButton("Vazgeç", null)
+            .setPositiveButton("Geri yükle") { _, _ ->
+                if (Data.importJson(this, text)) {
+                    WidgetProvider.updateAll(this)
+                    Toast.makeText(this, "Yedek geri yüklendi. Logolar için \"Kaydet ve logoları indir\"e bas.", Toast.LENGTH_LONG).show()
+                    skipSave = true
+                    recreate()
+                } else {
+                    Toast.makeText(this, "Yedek okunamadı (metin eksik ya da bozuk).", Toast.LENGTH_LONG).show()
+                }
+            }
+            .show()
     }
 
     private fun saveNow() {
@@ -181,6 +260,7 @@ class MainActivity : Activity() {
             ibanFs.map { it.text.toString() }
         )
         for (i in 0 until Data.N) Data.setLogoUrl(this, i, urlFs[i].text.toString())
+        Data.setWithOwner(this, ownerCb.isChecked)
         WidgetProvider.updateAll(this)
     }
 
@@ -221,6 +301,6 @@ class MainActivity : Activity() {
 
     override fun onPause() {
         super.onPause()
-        if (nameFs.size == Data.N) saveNow()
+        if (!skipSave && nameFs.size == Data.N) saveNow()
     }
 }
